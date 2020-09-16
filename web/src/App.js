@@ -1,19 +1,26 @@
 import React from 'react';
 import Typed from 'react-typed';
 import data from './data.json';
+import Autosuggest from 'react-autosuggest';
+import { debounce } from 'lodash';
 import './App.css';
 
 class App extends React.Component {
+
+  MAX_SUGGESTIONS = 6;
 
   initState = {
     active: 0,
     data,
     initData: data,
+    suggestions: [],
+    searchValue: '',
   }
 
   constructor() {
     super();
     this.state = this.initState;
+    this.debounceGetSuggestions = debounce(this.getSuggestions, 100);
   }
 
   componentDidMount() {
@@ -39,32 +46,77 @@ class App extends React.Component {
   }
 
   onSearch = e => {
-    if (e.which !== 13) return;
-    const value = e.target.value;
+    console.log(this.state.searchValue)
+  }
 
-    if (!value || !value.trim()) {
-      this.setState({ data: this.state.initData });
-      return;
-    }
-    
-    const result = {};
+  getSuggestionValue = e => e.name;
+
+  getSuggestions = (value) => {
+    if (!value) return [];
+
+    const suggestions = [];
+    let count = 0;
+
     for (let menu of data) {
       for (let e of menu.children) {
-        if (e.name.indexOf(value) !== -1 || e.content.indexOf(value) !== -1) {
-          if (result[menu.name]) {
-            result[menu.name].children.push(e);
+        const nameIndex = e.name.toLowerCase().indexOf(value.toLowerCase());
+        const contentIndex = e.content.toLowerCase().indexOf(value.toLowerCase());
+        if (nameIndex !== -1 || contentIndex !== -1) {
+          if (count < this.MAX_SUGGESTIONS) {
+            count++;
+            suggestions.push(e);
           } else {
-            result[menu.name] = {...menu, children: [e]};
+            return suggestions;
           }
         }
       }
     }
 
-    this.setState({ data: Object.values(result) });
+    this.setState({ suggestions });
+  }
+
+  onSuggestionsFetchRequested = ({ value }) => {
+    this.debounceGetSuggestions(value);
+  };
+
+  onSuggestionsClearRequested = () => {
+    this.setState({ suggestions: [] });
+  };
+
+  renderSuggestion = (suggestion, { query }) => {
+    const nameIndex = suggestion.name.toLowerCase().indexOf(query.toLowerCase());
+    const contentIndex = suggestion.content.toLowerCase().indexOf(query.toLowerCase());
+    const searchElement = {...suggestion};
+    if (nameIndex !== -1 || contentIndex !== -1) {
+      if (nameIndex !== -1) {
+        searchElement.name = searchElement.name.substr(0, nameIndex) + '<span class="highlight">' + searchElement.name.substr(nameIndex, query.length) + '</span>' + searchElement.name.substr(nameIndex + query.length);
+      }
+      if (contentIndex !== -1) {
+        searchElement.content = searchElement.content.substr(0, contentIndex) + '<span class="highlight">' + searchElement.content.substr(contentIndex, query.length) + '</span>' + searchElement.content.substr(contentIndex + query.length);
+      }
+    }
+
+    return (
+      <>
+        <img src={searchElement.img} alt={suggestion.name} />
+        <h3 dangerouslySetInnerHTML={{__html: searchElement.name}}></h3>
+        <p dangerouslySetInnerHTML={{__html: searchElement.content}}></p>
+      </>
+    );
+  }
+
+  onSearchChange = (event, { newValue }) => {
+    this.setState({
+      searchValue: newValue
+    });
+  };
+
+  onSuggestionSelected = (event, { suggestion}) => {
+    window.open(suggestion.url, "_blank");
   }
 
   render () {
-    const { active, data } = this.state;
+    const { active, data, searchValue, suggestions } = this.state;
     return (
       <div className="app">
       <header className="header">
@@ -98,7 +150,21 @@ class App extends React.Component {
               <div className="sectors" ref={e => this.ulRef = e}>
                   <div className="sector">
                       <div className="search">
-                          <input type="text" className="search-input" autoFocus onKeyPress={this.onSearch} />
+                          <Autosuggest
+                            onSuggestionSelected={this.onSuggestionSelected}
+                            suggestions={suggestions}
+                            onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
+                            onSuggestionsClearRequested={this.onSuggestionsClearRequested}
+                            getSuggestionValue={this.getSuggestionValue}
+                            renderSuggestion={this.renderSuggestion}
+                            inputProps={{
+                              className: 'search-input',
+                              autoFocus: true,
+                              type: 'text',
+                              value: searchValue,
+                              onChange: this.onSearchChange
+                            }}
+                          />
                           <button className="search-button" onClick={this.onSearch}>站内搜索</button>
                       </div>
                   </div>
@@ -108,11 +174,11 @@ class App extends React.Component {
                         <h2>{e.name}</h2>
                         <div className="links">
                           {e.children.map(item => (
-                            <a href={item.href} key={item.name} className="link" target="_blank">
+                            <a href={item.url} key={item.name} className="link" target="_blank">
                                 <img src={item.img} alt={item.name} />
                                 <div className="info">
-                                    <h3>{item.name}</h3>
-                                    <p>{item.content}</p>
+                                    <h3 dangerouslySetInnerHTML={{__html: item.name}}></h3>
+                                    <p dangerouslySetInnerHTML={{__html: item.content}}></p>
                                 </div>
                             </a>
                           ))}
@@ -146,7 +212,7 @@ class App extends React.Component {
       </div>
       </div>
     );
-  }
+  };
 }
 
 export default App;
