@@ -64,7 +64,7 @@ class App extends React.Component {
         if (nameIndex !== -1 || contentIndex !== -1) {
           if (count < this.MAX_SUGGESTIONS) {
             count++;
-            suggestions.push(e);
+            suggestions.push({...e, parentName: menu.name});
           } else {
             return suggestions;
           }
@@ -100,6 +100,9 @@ class App extends React.Component {
       <>
         <img src={searchElement.img} alt={suggestion.name} />
         <h3 dangerouslySetInnerHTML={{__html: searchElement.name}}></h3>
+        <span className="dot"></span>
+        <p>{suggestion.parentName}</p>
+        <span className="dot" style={{marginLeft: 10, marginRight: 20}}></span>
         <p dangerouslySetInnerHTML={{__html: searchElement.content}}></p>
       </>
     );
@@ -192,7 +195,7 @@ class App extends React.Component {
               <ul>
                   {data.map((e, i) => (
                     <li className={active === i ? 'active' : ''} key={e.name} onClick={() => this.onSideNavClick(e.name)}>
-                        <span className="side-nav-dot"></span>
+                        <span className="dot"></span>
                         <span className="side-nav-title">{e.name}</span>
                     </li>
                   ))}

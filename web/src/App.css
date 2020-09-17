@@ -258,7 +258,7 @@ ul {
   transition: all .2s ease;
 }
 
-.side-nav .side-nav-dot {
+.dot {
   display: block;
   width: 4px;
   height: 4px;

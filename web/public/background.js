@@ -31,7 +31,7 @@ getSuggestions = (value) => {
                     count++;
                     suggestions.push({
                         content: e.url,
-                        description: `${e.name} - ${e.content}`,
+                        description: `${e.name} - ${menu.name} - ${e.content}`,
                     });
                 } else {
                     return suggestions;
