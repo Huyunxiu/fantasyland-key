@@ -1,22 +1,23 @@
 {
   "manifest_version": 2,
-  "name": "芬香研发导航站",
+  "name": "FX.TECH",
   "version": "1.0.0",
   "chrome_url_overrides": {
     "newtab": "index.html"
   },
   "icons": {
     "16": "logo.png",
-    "48": "logo.png",
+    "32": "logo.png",
     "128": "logo.png"
-  },
+},
   "browser_action": {
     "default_icon": "logo.png",
-    "default_title": "芬香研发导航站"
+    "default_title": "FX.TECH"
   },
   "background": {
     "scripts": ["background.js"],
     "persistent": false
   },
+  "omnibox": { "keyword" : "fx" },
   "permissions": ["tabs"]
 }
